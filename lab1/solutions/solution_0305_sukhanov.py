@@ -28,26 +28,25 @@ def solve() -> DataFrame:
             JOIN match m ON pr.match_id = m.match_id
     """)
 
-    # nemesis(player_id, player_name, nemesis_id, nemesis_name, total_matches, winning_matches, win_rate)
-    # player_id, player_name - данные игрока
-    # nemesis_id, nemesis_name - данные второго игрока (немезиды)
+    # nemesis(player_name, nemesis_name, total_matches, winning_matches, win_rate)
+    # player_name - данные игрока
+    # nemesis_name - данные второго игрока (немезиды)
     # total_matches - сколько всего матчей проведено с игроком и немезидой,
     #     при условии принадлежности к разным командам
     # winning_matches - в каком числе матчей игрок оказывался в команде, одержавшей победу
     # win_rate - отношение winning_matches / total_matches
     view("nemesis", """
         SELECT
-            p.player_id AS player_id,
             p.player_name AS player_name,
-            n.player_id AS nemesis_id,
             n.player_name AS nemesis_name,
             COUNT(*) AS total_matches,
             COUNT(*) FILTER(WHERE p.is_winner) AS winning_matches,
             (COUNT(*) FILTER(WHERE p.is_winner)) / COUNT(*) AS win_rate
         FROM player_to_match p
             JOIN player_to_match n ON (p.match_id = n.match_id AND p.is_winner != n.is_winner)
-        GROUP BY p.player_id, p.player_name, n.player_id, n.player_name
-        ORDER BY p.player_id, n.player_id
+        GROUP BY p.player_name, n.player_name
+        HAVING total_matches >= 5
+        ORDER BY win_rate DESC
     """)
 
     # player_streak_groups(player_id, player_name, match_finished_at, is_winner, streak_group)
@@ -89,17 +88,18 @@ def solve() -> DataFrame:
         GROUP BY player_id, player_name, streak_group
     """)
 
-    # avg_winstreak_len(player_id, player_name, avg_winstreak_len)
-    # player_id, player_name - данные игрока
+    # avg_winstreak_len(player_name, avg_winstreak_len)
+    # player_name - данные игрока
     # avg_winstreak_len - средняя длина победных серий
     view("avg_winstreak_len", """
         SELECT
-            player_id,
             player_name,
             AVG(winstreak_len) AS avg_winstreak_len
         FROM player_winstreaks
-        GROUP BY player_id, player_name
-        ORDER BY player_id
+        GROUP BY player_name
+        ORDER BY avg_winstreak_len DESC
     """)
 
-    return spark.sql("select * from nemesis"), spark.sql("select * from avg_winstreak_len")
+    nemesis_df = spark.sql("select * from nemesis")
+    avg_winstreak_len_df = spark.sql("select * from avg_winstreak_len")
+    return nemesis_df, avg_winstreak_len_df
