@@ -1,7 +1,7 @@
 from pyspark.shell import spark
 from pyspark.sql import DataFrame
 
-from common import read_csv, view
+from lab1.common import read_csv, view
 
 def solve() -> DataFrame:
     match = read_csv('match')

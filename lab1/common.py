@@ -21,7 +21,7 @@ def read_csv(name) -> DataFrame:
 
 
 def run_solution(name):
-    module = importlib.import_module(f'solutions.{name}')
+    module = importlib.import_module(f'lab1.solutions.{name}')
     return getattr(module, 'solve')()
 
 
