@@ -17,5 +17,6 @@ def solve(common: SparkContextCommon) -> DataFrame:
                 2
             ) AS plagiarism_measure
         FROM raw_data input1 JOIN raw_data input2 ON input1.solution != input2.solution
+        ORDER BY plagiarism_measure DESC
     """)
     df.show()
