@@ -4,7 +4,7 @@ from os.path import isfile, join
 
 from pyspark.sql import DataFrame, SparkSession
 from pyspark.sql.functions import udf, col
-from pyspark.sql.types import StringType, DoubleType
+from pyspark.sql.types import StringType, DoubleType, ArrayType, CharType
 
 import re
 
@@ -24,7 +24,7 @@ def csharp_prepare(source_code: str):
     # Удаление однострочных и многострочных комментариев
     result = re.sub(
         r'(?x)( ""(?> (?<=@.) (?>[^""]+|"""")*  | (?> [^""\\]+ | \\. )* ) ""| \' (?> [^\'\\]+ | \\. )* \')| // .* | /\* (?s: .*? \*/ )',
-        ' ',
+        '',
         source_code)
     # Удаление последовательностей пробельных символов
     result = re.sub(r'\s+', ' ', result)
@@ -87,6 +87,7 @@ class SparkContextCommon:
     def __init__(self, spark):
         self.spark = spark
         self.spark.udf.register('csharp_prepare', lambda x: csharp_prepare(x), StringType())
+        self.spark.udf.register('csharp_prepare_2', lambda x: list(csharp_prepare(x)), ArrayType(StringType()))
         self.spark.udf.register('moss', lambda a, b, k, l: moss_winnowing(a, b, k, l), DoubleType())
 
     def view(self, name: str, target: DataFrame | str) -> DataFrame:
